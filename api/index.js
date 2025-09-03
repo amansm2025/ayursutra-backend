@@ -14,12 +14,35 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Simple MongoDB connection for serverless
-if (process.env.MONGODB_URI && mongoose.connection.readyState === 0) {
-  mongoose.connect(process.env.MONGODB_URI, {
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 5000
-  }).catch(err => console.error('MongoDB error:', err));
+// MongoDB connection with reconnection logic
+const connectDB = async () => {
+  if (mongoose.connection.readyState === 1) return;
+  
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 5000,
+      maxPoolSize: 1,
+      bufferCommands: false,
+      bufferMaxEntries: 0
+    });
+    console.log('MongoDB connected');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+  }
+};
+
+// Middleware to ensure DB connection
+app.use(async (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    await connectDB();
+  }
+  next();
+});
+
+// Initial connection
+if (process.env.MONGODB_URI) {
+  connectDB();
 }
 
 // Health check
