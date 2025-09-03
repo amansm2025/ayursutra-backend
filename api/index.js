@@ -14,30 +14,43 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// MongoDB connection with reconnection logic
+// MongoDB connection with proper awaiting
 const connectDB = async () => {
-  if (mongoose.connection.readyState === 1) return;
+  if (mongoose.connection.readyState === 1) return true;
   
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 5000,
-      maxPoolSize: 1,
-      bufferCommands: false,
-      bufferMaxEntries: 0
+      maxPoolSize: 1
     });
     console.log('MongoDB connected');
+    return true;
   } catch (error) {
     console.error('MongoDB connection error:', error);
+    return false;
   }
 };
 
 // Middleware to ensure DB connection
 app.use(async (req, res, next) => {
-  if (mongoose.connection.readyState !== 1) {
-    await connectDB();
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      const connected = await connectDB();
+      if (!connected) {
+        return res.status(500).json({ 
+          success: false, 
+          message: 'Database connection failed' 
+        });
+      }
+    }
+    next();
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: 'Database connection error' 
+    });
   }
-  next();
 });
 
 // Initial connection
