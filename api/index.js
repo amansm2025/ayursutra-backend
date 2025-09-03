@@ -14,36 +14,13 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Database connection with caching for serverless
-let cachedConnection = null;
-
-async function connectToDatabase() {
-  if (cachedConnection && mongoose.connection.readyState === 1) {
-    return cachedConnection;
-  }
-
-  if (process.env.MONGODB_URI) {
-    try {
-      cachedConnection = await mongoose.connect(process.env.MONGODB_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 5000,
-        socketTimeoutMS: 10000,
-        maxPoolSize: 1,
-        bufferMaxEntries: 0,
-        bufferCommands: false
-      });
-      console.log('MongoDB connected');
-      return cachedConnection;
-    } catch (err) {
-      console.error('MongoDB error:', err);
-      throw err;
-    }
-  }
+// Simple MongoDB connection for serverless
+if (process.env.MONGODB_URI && mongoose.connection.readyState === 0) {
+  mongoose.connect(process.env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 5000
+  }).catch(err => console.error('MongoDB error:', err));
 }
-
-// Connect to database on startup
-connectToDatabase();
 
 // Health check
 app.get('/health', (req, res) => {
