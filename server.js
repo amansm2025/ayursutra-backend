@@ -6,6 +6,8 @@ const passport = require('./src/config/passport');
 require('dotenv').config();
 
 // Debug environment variables
+console.log('MongoDB URI:', process.env.MONGODB_URI ? 'Found' : 'Missing');
+console.log('JWT Secret:', process.env.JWT_SECRET ? 'Found' : 'Missing');
 console.log('Google Client ID:', process.env.GOOGLE_CLIENT_ID ? 'Found' : 'Missing');
 console.log('Google Client Secret:', process.env.GOOGLE_CLIENT_SECRET ? 'Found' : 'Missing');
 
@@ -38,9 +40,18 @@ app.use((req, res, next) => {
 });
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 30000,
+  socketTimeoutMS: 45000,
+  bufferMaxEntries: 0
+})
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
 
 // Health check endpoint
 app.get('/health', (req, res) => {
