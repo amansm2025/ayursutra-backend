@@ -37,25 +37,25 @@ exports.register = async (req, res, next) => {
       });
     }
 
+    // Only allow patient registration
+    if (role && role !== 'patient') {
+      return res.status(403).json({
+        success: false,
+        message: 'Registration is only available for patients. Practitioners and admins are created by administrators.'
+      });
+    }
+
     const userData = {
       name,
       email,
       password,
-      role: role || 'patient',
+      role: 'patient', // Force patient role
       phone,
       address,
       dateOfBirth,
       gender,
       age
     };
-
-    if (role === 'practitioner') {
-      userData.specialization = specialization;
-      userData.experience = experience;
-      userData.qualification = qualification;
-      userData.licenseNumber = licenseNumber;
-      userData.consultationFee = consultationFee || 1000;
-    }
 
     const user = await User.create(userData);
     user.lastLogin = new Date();

@@ -44,8 +44,7 @@ mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverSelectionTimeoutMS: 30000,
-  socketTimeoutMS: 45000,
-  bufferMaxEntries: 0
+  socketTimeoutMS: 45000
 })
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => {
@@ -103,7 +102,7 @@ app.use((error, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 8001;
+const PORT = process.env.PORT || 8000;
 
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {

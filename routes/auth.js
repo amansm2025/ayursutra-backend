@@ -3,10 +3,11 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const passport = require('passport');
 
 const router = express.Router();
 
-// Register
+// Register - Only for patients
 router.post('/register', async (req, res) => {
   try {
     console.log('Registration request:', req.body);
@@ -16,6 +17,11 @@ router.post('/register', async (req, res) => {
     // Basic validation
     if (!name || !email || !password || !role) {
       return res.status(400).json({ message: 'Missing required fields' });
+    }
+    
+    // Only allow patient registration
+    if (role !== 'patient') {
+      return res.status(403).json({ message: 'Registration is only available for patients. Practitioners and admins are created by administrators.' });
     }
     
     if (password.length < 6) {
@@ -166,5 +172,25 @@ router.put('/change-password', auth, [
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// Google OAuth routes
+router.get('/google', passport.authenticate('google', {
+  scope: ['profile', 'email']
+}));
+
+router.get('/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  async (req, res) => {
+    try {
+      const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+      
+      // Redirect to frontend with token
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/google/success?token=${token}`);
+    } catch (error) {
+      console.error('Google auth callback error:', error);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=auth_failed`);
+    }
+  }
+);
 
 module.exports = router;
