@@ -182,7 +182,11 @@ router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   async (req, res) => {
     try {
+      console.log('Google callback - req.user:', req.user);
+      console.log('Google callback - FRONTEND_URL:', process.env.FRONTEND_URL);
+      
       if (!req.user) {
+        console.log('No user found in callback');
         return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=auth_failed`);
       }
       
@@ -196,11 +200,13 @@ router.get('/google/callback',
         age: req.user.age
       };
       
+      console.log('Redirecting to frontend with token and user data');
       // Redirect to frontend with token and user data
       res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/google/success?token=${token}&user=${encodeURIComponent(JSON.stringify(userPublic))}`);
     } catch (error) {
       console.error('Google auth callback error:', error);
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=auth_failed`);
+      console.error('Error stack:', error.stack);
+      res.status(500).json({ message: 'Internal server error', error: error.message });
     }
   }
 );
