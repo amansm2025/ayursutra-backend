@@ -4,7 +4,15 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: { 
+    type: String, 
+    required: function() { return !this.googleId; },
+    select: false 
+  },
+  googleId: {
+    type: String,
+    sparse: true
+  },
   role: { type: String, enum: ['patient', 'practitioner', 'admin'], required: true },
   phone: String,
   address: String,
@@ -35,7 +43,14 @@ userSchema.pre('save', async function(next) {
 });
 
 userSchema.methods.comparePassword = async function(password) {
+  if (!this.password) return false;
   return bcrypt.compare(password, this.password);
+};
+
+userSchema.methods.getPublicProfile = function() {
+  const userObject = this.toObject();
+  delete userObject.password;
+  return userObject;
 };
 
 module.exports = mongoose.model('User', userSchema);
