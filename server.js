@@ -63,13 +63,13 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', require('./src/routes/auth'));
-app.use('/api/patients', require('./src/routes/patients'));
-app.use('/api/practitioners', require('./src/routes/practitioners'));
-app.use('/api/bookings', require('./src/routes/bookings'));
-app.use('/api/therapies', require('./src/routes/therapies'));
-app.use('/api/notifications', require('./src/routes/notifications'));
-app.use('/api/admin', require('./src/routes/admin'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/patients', require('./routes/patients'));
+app.use('/api/practitioners', require('./routes/practitioners'));
+app.use('/api/bookings', require('./routes/bookings'));
+app.use('/api/therapies', require('./routes/therapies'));
+app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/admin', require('./routes/admin'));
 
 // 404 handler
 app.use('*', (req, res) => {
